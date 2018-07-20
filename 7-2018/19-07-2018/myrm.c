@@ -16,6 +16,17 @@ int get_type(int mode)
 		return 0;
 }
 
+//获取文件的状态,返回文件的st_mode
+int get_mode(const char *pathname)
+{
+	struct stat argv_buf;
+	if(lstat(pathname, &argv_buf) < 0)
+	{
+		perror("lstat");
+		exit(1);
+	}
+	return argv_buf.st_mode;
+}
 //删除文件
 void rm_file(const char *pathname)
 {
@@ -25,7 +36,7 @@ void rm_file(const char *pathname)
 //删除目录
 void rm_dir(const char *pathname)
 {
-		rmdir(pathname);
+	rmdir(pathname);
 }
 
 //获取目录的文件并删除
@@ -40,7 +51,7 @@ void dir_pathname(const char *pathname)
 	chdir(pathname);
 	if(dp == NULL)
 	{
-		perror("open");
+		perror("opendir");
 		exit(1);
 	}
 	while((dirp = readdir(dp)) != NULL)
@@ -79,7 +90,8 @@ void is_exist(const char *pathname)
 
 int main(int argc, char *argv[])
 {
-	struct stat argv_buf;
+	int i;
+
 	if(1 == argc)
 	{
 		printf("Usage:./myrm filename OR ./myrm -rf diretory\n");
@@ -88,12 +100,7 @@ int main(int argc, char *argv[])
 	if(2 == argc)
 	{
 		is_exist(argv[1]);
-		if(lstat(argv[1], &argv_buf) < 0)
-		{
-			perror("lstat");
-			exit(1);
-		}
-		if(get_type(argv_buf.st_mode))
+		if(get_type(get_mode(argv[1])))
 		{
 			printf("rm: cannot remove ‘%s’: Is a directory\n", argv[1]);
 		}
@@ -103,16 +110,17 @@ int main(int argc, char *argv[])
 	{
 		if(strcmp(argv[1], "-rf") != 0)
 		{
-			printf("Option Error!\n");
-			exit(1);
+			is_exist(argv[1]);
+			if(get_type(get_mode(argv[1])))
+			{
+				printf("rm: cannot remove ‘%s’: Is a directory\n", argv[1]);
+			}
+			rm_file(argv[1]);
 		}
-		if(lstat(argv[2], &argv_buf) < 0)
+		is_exist(argv[2]);
+		if(get_type(get_mode(argv[2])))
 		{
-			perror("lstat");
-			exit(1);
-		}
-		if(get_type(argv_buf.st_mode))
-		{
+
 			dir_pathname(argv[2]);
 		}
 		else
@@ -122,8 +130,34 @@ int main(int argc, char *argv[])
 	}
 	if(argc > 3)
 	{
-		printf("Usage:./myrm filename OR ./myrm -rf diretory\n");
-		exit(1);
+		if(strcmp(argv[1], "-rf") == 0)
+		{
+			for(i = 2; i < argc; i++)
+			{
+				is_exist(argv[i]);
+				if(get_type(get_mode(argv[i])))
+				{
+					dir_pathname(argv[i]);
+				}
+				else
+				{
+					rm_file(argv[i]);
+				}
+			}
+		}
+		else
+		{
+			for(i = 1; i < argc; i++)
+			{
+				is_exist(argv[i]);
+				if(get_type(get_mode(argv[i])))
+				{
+					printf("rm: cannot remove ‘%s’: Is a directory\n", argv[i]);
+				}
+				rm_file(argv[i]);
+			}	
+
+		}
 	}
 
 	return 0;
