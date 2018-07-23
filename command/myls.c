@@ -11,6 +11,7 @@
 #include <pwd.h>
 #include <grp.h>
 
+#define BUFSIZE 4096
 //由uid转换为用户名
 char *uid_to_name(uid_t uid)
 {
@@ -48,6 +49,7 @@ void get_type(int mode, char *str)
 	//获取文件权限
 	if(mode & S_IRUSR)	
 		str[1] = 'r';
+
 	if(mode & S_IWUSR)
 		str[2] = 'w';
 	if(mode & S_ISUID)
@@ -80,8 +82,13 @@ void get_files( const char *str)
 	struct stat stat_buf;
 	int flag;
 	char str_mode[11];
+	char buf[BUFSIZE];
 
+	getcwd(buf, BUFSIZE);
+	printf("%s\n",buf);
 	chdir(str);
+	getcwd(buf, BUFSIZE);
+	printf("%s\n",buf);
 	dp = opendir(str);
 	if(dp == NULL)
 	{
@@ -112,7 +119,6 @@ void get_files( const char *str)
 		printf("%8ld ", stat_buf.st_size);
 		printf("%.12s ", ctime(&stat_buf.st_mtim));
 		printf("%s\n", dirp->d_name);
-
 	}
 	closedir(dp);
 }

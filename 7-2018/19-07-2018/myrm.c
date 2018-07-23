@@ -7,7 +7,7 @@
 #include <sys/fcntl.h>
 #include <sys/stat.h>
 
-//获取文件类型，主要是目录和其他文件,目录返回1，其他文件返回
+//获取文件类型，主要是目录和其他文件,目录返回1，其他文件返回0
 int get_type(int mode)
 {
 	if(S_ISDIR(mode))
@@ -39,12 +39,12 @@ void rm_dir(const char *pathname)
 	rmdir(pathname);
 }
 
-//获取目录的文件并删除
-void dir_pathname(const char *pathname)
+//递归删除目录及文件
+void rm_dir_re(const char *pathname)
 {
 	DIR *dp;
 	struct dirent *dirp;
-	struct stat dir_buf;
+struct stat dir_buf;
 	int dir_flag;
 
 	dp = opendir(pathname);
@@ -67,7 +67,7 @@ void dir_pathname(const char *pathname)
 			if(0 == strcmp(dirp->d_name, ".") || 0 == strcmp(dirp->d_name, ".."))
 				continue;
 			else
-				dir_pathname(dirp->d_name);
+				rm_dir_re(dirp->d_name);
 		}
 		if(0 == get_type(dir_buf.st_mode))
 		{
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 		is_exist(argv[1]);
 		if(get_type(get_mode(argv[1])))
 		{
-			printf("rm: cannot remove ‘%s’: Is a directory\n", argv[1]);
+			printf("myrm: cannot remove ‘%s’: Is a directory\n", argv[1]);
 		}
 		rm_file(argv[1]);
 	}
@@ -113,15 +113,22 @@ int main(int argc, char *argv[])
 			is_exist(argv[1]);
 			if(get_type(get_mode(argv[1])))
 			{
-				printf("rm: cannot remove ‘%s’: Is a directory\n", argv[1]);
+				printf("myrm: cannot remove ‘%s’: Is a directory\n", argv[1]);
 			}
 			rm_file(argv[1]);
+			is_exist(argv[2]);
+			if(get_type(get_mode(argv[2])))
+			{
+				printf("myrm: cannot remove ‘%s’: Is a directory\n", argv[2]);
+			}
+			rm_file(argv[2]);
+			exit(1);
 		}
 		is_exist(argv[2]);
 		if(get_type(get_mode(argv[2])))
 		{
 
-			dir_pathname(argv[2]);
+			rm_dir_re(argv[2]);
 		}
 		else
 		{
@@ -137,7 +144,7 @@ int main(int argc, char *argv[])
 				is_exist(argv[i]);
 				if(get_type(get_mode(argv[i])))
 				{
-					dir_pathname(argv[i]);
+					rm_dir_re(argv[i]);
 				}
 				else
 				{
@@ -152,7 +159,7 @@ int main(int argc, char *argv[])
 				is_exist(argv[i]);
 				if(get_type(get_mode(argv[i])))
 				{
-					printf("rm: cannot remove ‘%s’: Is a directory\n", argv[i]);
+					printf("myrm: cannot remove ‘%s’: Is a directory\n", argv[i]);
 				}
 				rm_file(argv[i]);
 			}	
