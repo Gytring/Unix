@@ -44,7 +44,7 @@ void rm_dir_re(const char *pathname)
 {
 	DIR *dp;
 	struct dirent *dirp;
-struct stat dir_buf;
+	struct stat dir_buf;
 	int dir_flag;
 
 	dp = opendir(pathname);
