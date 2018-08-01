@@ -85,10 +85,10 @@ void get_files( const char *str)
 	char buf[BUFSIZE];
 
 	getcwd(buf, BUFSIZE);
-	printf("%s\n",buf);
+//	printf("%s\n",buf);
 	chdir(str);
 	getcwd(buf, BUFSIZE);
-	printf("%s\n",buf);
+//	printf("%s\n",buf);
 	dp = opendir(str);
 	if(dp == NULL)
 	{
@@ -117,7 +117,7 @@ void get_files( const char *str)
 		printf("%4d ",(int)stat_buf.st_nlink);
 		printf("%-8s%-8s", uid_to_name(stat_buf.st_uid), gid_to_name(stat_buf.st_gid));
 		printf("%8ld ", stat_buf.st_size);
-		printf("%.12s ", ctime(&stat_buf.st_mtim));
+		printf("%.12s ", ctime((time_t *)&stat_buf.st_mtim) + 4);
 		printf("%s\n", dirp->d_name);
 	}
 	closedir(dp);
