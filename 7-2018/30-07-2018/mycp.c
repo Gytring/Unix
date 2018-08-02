@@ -8,9 +8,13 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+//缓冲区的大小
 #define BUFFSZIE 4096
+//创建文件权限
 #define FILEMODE 0664
+//创建目录权限
 #define DIRMODE	 0775
+//创建目录的最大长度
 #define PATHSIZE 255
 
 //错误提示输出
@@ -24,14 +28,19 @@ void copy_dir(char *des_str, char *src_str);
 
 int main(int argc, char *argv[])
 {
+	//获取命令行参数的属性
 	struct stat st_buf, src_buf, des_buf;
+	char re_dir[PATHSIZE];
 	int i;
+	//获取当前目录
+	getcwd(re_dir, PATHSIZE);
 
 	if(argc < 3)
 	{
 		fprintf(stderr, "usage: %s source ... destination\n", *argv);
 	}
 
+	//两个参数，四种情况
 	if(argc ==3 )
 	{
 		src_buf = get_stat(argv[1]);
@@ -43,6 +52,7 @@ int main(int argc, char *argv[])
 	}
 
 	st_buf = get_stat(argv[argc - 1]);
+	//复制多个文件和目录
 	if(argc > 3)
 	{
 		if(!S_ISDIR(st_buf.st_mode))
@@ -57,6 +67,7 @@ int main(int argc, char *argv[])
 				fprintf(stderr, "Error: %s is not exist!", argv[i]);
 				exit(1);
 			}
+			chdir(re_dir);
 			copy_dir(argv[i], argv[argc-1]);
 		}
 
@@ -77,6 +88,7 @@ struct stat get_stat(const char *pathname)
 	if(lstat(pathname, &st_buf) < 0)
 	{
 		perror("lstat");
+		printf("ERROR: %s\n", pathname);
 		exit(1);
 	}
 	return st_buf;
@@ -96,9 +108,8 @@ void copy_file(char *src_str, char *des_str)
 		oops("Cannot open ", src_str);
 	}
 	
-	if(access(des_str, F_OK) )
+	if(!access(des_str, F_OK) )
 	{
-		printf("%s\n", re_buf);
 		st_buf = get_stat(des_str);
 		if(S_ISDIR(st_buf.st_mode))
 		{
@@ -107,22 +118,18 @@ void copy_file(char *src_str, char *des_str)
 		}
 		else
 		{
-			printf("1\n");
 			dir_str = des_str;
 		}
 	}
 	else
 	{
 		dir_str = des_str;
-		printf("2\n");
 	}
 
-	printf("%s", dir_str);
 	if((out_fd = creat(dir_str, FILEMODE)) == -1)
 	{
 		oops("Cannot creat ", des_str);
 	}
-	chdir(re_buf);
 
 	while((n_chars = read(in_fd, buf, BUFFSZIE)) > 0)
 	{
@@ -134,6 +141,8 @@ void copy_file(char *src_str, char *des_str)
 
 	if(close(in_fd)== -1 || close(out_fd) == -1)
 		oops("Closing files error ", "");
+	//返回原目录
+	chdir(re_buf);
 }
 
 void copy_dir(char *src_str, char *des_str)
@@ -141,23 +150,29 @@ void copy_dir(char *src_str, char *des_str)
 	DIR *dp;
 	char des_dir_buf[PATHSIZE];
 	char src_dir_buf[PATHSIZE];
+	char src_dir_buf_i[PATHSIZE];
 	struct dirent *dirp;
 	struct stat src_buf;
 
 	src_buf = get_stat(src_str);
 	if(S_ISDIR(src_buf.st_mode))
 	{
+		//目录的跳转及记录
 		getcwd(src_dir_buf, PATHSIZE);
 		chdir(des_str);
 		mkdir(src_str, DIRMODE);
+		chdir(src_str);
+		getcwd(des_dir_buf, PATHSIZE);
 		chdir(src_dir_buf);
 		dp = opendir(src_str);
 		chdir(src_str);
+		getcwd(src_dir_buf_i, PATHSIZE);
 		if(dp == NULL)
 		{
 			perror("opendir");
 			exit(1);
 		}
+		//循环获取目录信息
 		while((dirp = readdir(dp)) != NULL)
 		{
 			src_buf = get_stat(dirp->d_name);
@@ -165,21 +180,22 @@ void copy_dir(char *src_str, char *des_str)
 				continue;
 			else if(S_ISDIR(src_buf.st_mode))
 			{
-				chdir(des_str);
-				mkdir(dirp->d_name, DIRMODE);
-				chdir(dirp->d_name);
-				getcwd(des_dir_buf, PATHSIZE);
-				chdir(src_dir_buf);
+				//进行递归调用
 				copy_dir(dirp->d_name, des_dir_buf);
-				chdir(src_dir_buf);
 			}
 			else
 			{
-				copy_file(dirp->d_name, des_str);
+				//复制文件，进入目的目录
+				chdir(src_dir_buf_i);
+				copy_file(dirp->d_name, des_dir_buf);
 			}
 		}
 		closedir(dp);
 	}
 	else
+	{
 		copy_file(src_str, des_str);
+	}
+	//返回之前的目录
+	chdir(src_dir_buf);
 }
