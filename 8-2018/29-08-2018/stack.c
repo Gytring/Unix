@@ -11,15 +11,20 @@ struct node{
 };
 
 typedef struct node* NODE;
-NODE sk;
 
 NODE stack_init()
 {
-	NODE stack;
-	sk = (NODE)malloc(sizeof(struct node));
-	sk->data = 1;
-	sk->next = NULL;
-	stack = sk;
+	NODE stack = NULL;
+	stack = (NODE)malloc(sizeof(struct node));
+
+	if(stack == NULL)
+	{
+		fprintf(stderr, "malloc for stack failed!\n");
+		exit(1);
+	}
+	memset(stack, 0, sizeof(struct node));
+	stack->data = 1;
+	stack->next = NULL;
 	return stack;
 }
 
@@ -53,10 +58,16 @@ NODE stack_push(NODE stack, int data)
 		fprintf(stderr, "The stack is full!\n");
 		return stack;
 	}
-	NODE p = NULL;
+	NODE p;
+	p = (NODE)malloc(sizeof(struct node));
+	if(p == NULL)
+	{
+		fprintf(stderr, "Malloc for p is failed\n");
+		exit(1);
+	}
+	memset(p, 0, sizeof(struct node));
 	p->next = stack;
-	p->data = stack->data;
-	printf("%d\n", p->data);
+	p->data = data;
 	return p;
 }
 
@@ -94,18 +105,9 @@ int main(int argc, char *argv[])
 {
 	NODE stack, p;
 	stack = stack_init();
-	stack_push(stack, 2);
-	stack_push(stack, 3);
-	stack_push(stack, 4);
-	stack_push(stack, 5);
-	//	stack_push(stack, 6);
-	//	stack_push(stack, 7);
-	//	stack_push(stack, 8);
-	//	stack_push(stack, 9);
-	//	stack_push(stack, 10);
-	p = stack_push(stack, 11);
+	p = stack_push(stack, 2);
 	print_stack(p);
 
-	free(sk);
+	free(stack);
 	exit(0);
 }
