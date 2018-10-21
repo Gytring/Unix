@@ -11,6 +11,7 @@ void swap(int *x, int *y)
 	*y  = tmp;
 }
 
+//快排
 void quick_sort(int *arr, int l, int r)
 {
 	if(l < r)
@@ -37,7 +38,25 @@ void quick_sort(int *arr, int l, int r)
 	}
 }
 
-void gen_arr(int arr[], int len, int max)
+//希尔排序
+void shell_sort(int *arr, int len)
+{
+	int inc, i, j;
+	for(inc = len / 2; inc >= 1; inc /= 2)
+	{
+		for(i = inc; i < len; i++)
+		{
+			for(j = i - inc; j >= 0; j -=inc )
+			{
+				if(arr[j + inc] < arr[j])
+					swap(&arr[j + inc], &arr[j]);
+			}
+		}
+	}
+
+}
+
+void init_arr(int arr[], int len, int max)
 {
 	srand((int)time(0));
 
@@ -78,13 +97,14 @@ int main(int argc, char *argv[])
 	maxnum = atoi(argv[2]);
 
 	int arr[len];
-	gen_arr(arr, len, maxnum);
+	init_arr(arr, len, maxnum);
 
 	printf("排序前的数组: \n");
 	display(arr, len);
 
 	printf("排序后的数组: \n");
-	quick_sort(arr, 0, len);
+	//quick_sort(arr, 0, len);
+	shell_sort(arr, len);
 	display(arr, len);
 
 	exit(0);
